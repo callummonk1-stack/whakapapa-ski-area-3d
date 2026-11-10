@@ -730,6 +730,10 @@ function symDraw(g,k,W,H,c){                    // trail-map symbols, drawn on a
     g.fillStyle='#14161a'; g.font='800 '+Math.round(R*1.25)+'px '+FIELD.labelFont; g.textAlign='center'; g.textBaseline='middle'; g.fillText(String(c||''),cx,cy+R*0.08);
   } else if(k==='aid'){                           // first aid: a plain red cross, as the map's key draws it
     g.fillStyle='#e3121b'; g.fillRect(cx-R*0.22,cy-R*0.8,R*0.44,R*1.6); g.fillRect(cx-R*0.8,cy-R*0.22,R*1.6,R*0.44);
+  } else if(k==='caution'){                       // unpatrolled / take care: yellow diamond, black "!" (Fox Peak's map)
+    g.beginPath(); g.moveTo(cx,cy-R); g.lineTo(cx+R,cy); g.lineTo(cx,cy+R); g.lineTo(cx-R,cy); g.closePath();
+    g.fillStyle=c||'#ffd500'; g.fill(); g.strokeStyle='#14161a'; g.lineWidth=R*0.12; g.stroke();
+    g.fillStyle='#14161a'; g.fillRect(cx-R*0.1,cy-R*0.55,R*0.2,R*0.68); g.fillRect(cx-R*0.1,cy+R*0.25,R*0.2,R*0.2);
   } else if(k==='excl'){                          // caution: black disc with a white "!"
     g.beginPath(); g.arc(cx,cy,R,0,7); g.fillStyle='#14161a'; g.fill(); g.strokeStyle='#ffffff'; g.lineWidth=R*0.2; g.stroke();
     g.fillStyle='#ffffff'; g.fillRect(cx-R*0.13,cy-R*0.6,R*0.26,R*0.78); g.fillRect(cx-R*0.13,cy+R*0.35,R*0.26,R*0.26);
@@ -771,7 +775,7 @@ function makePeak(m){                            // a summit as the map letters 
 function makeMark(m){
   if(m.k==='peak'||m.k==='height') return makePeak(m.k==='height'?{h:m.t||m.h,p:m.p,plain:m.plain}:m);
   if(m.k==='num') return symSprite('num',m.p,lFac,{k:0.75,c:m.t});
-  if(['pin','gun','warn','excl','aid'].includes(m.k)){
+  if(['pin','gun','warn','excl','aid','caution'].includes(m.k)){
     const sp=symSprite(m.k,m.p,lFac,{k:m.k==='gun'?0.6:0.9,w:m.k==='pin'?52:64,h:64,c:m.c});
     if(m.t) makeLabel(m.t,[m.p[0],m.p[1]-0.006,m.p[2]],false,lFac,'#14161a');
     return sp;
@@ -1383,8 +1387,8 @@ function hold(id,fn){
   b.addEventListener('pointerleave',off);
   b.addEventListener('pointercancel',off);
 }
-hold('nLeft',  v=>nav.mx = v?-1:0);           // the arrows move the camera; dragging turns and tilts
-hold('nRight', v=>nav.mx = v? 1:0);
+hold('nLeft',  v=>nav.mx = v? 1:0);           // the arrows move the camera; dragging turns and tilts
+hold('nRight', v=>nav.mx = v?-1:0);
 hold('nTiltUp',v=>nav.mz = v? 1:0);
 hold('nTiltDn',v=>nav.mz = v?-1:0);
 hold('nIn',    v=>nav.zoom = v?-1:0);
@@ -1414,7 +1418,7 @@ function keyNav(dt){
   const Q=keys.KeyQ, E=keys.KeyE;
   const r=(Q?1:0)+(E?-1:0)+nav.rot;                 // Q / E turn
   const t=nav.tilt;
-  const mx=(L?-1:0)+(R?1:0)+nav.mx, mz=(U?1:0)+(D?-1:0)+nav.mz;   // arrows / WASD move
+  const mx=(L?1:0)+(R?-1:0)+nav.mx, mz=(U?1:0)+(D?-1:0)+nav.mz;   // arrows / WASD move (right moves the view right)
   const z=(O?1:0)+(I?-1:0)+nav.zoom;
   if(r||t||z||mx||mz){
       idle=0;
@@ -1700,7 +1704,7 @@ function setupUI(){
       else if(/^l(gondola|quad|double|tbar|carpet)$/.test(k)){ if(SKI.lifts.some(l=>liftIcon(l)===k)) rows.push('<div data-k="lift">'+icon(k,FIELD.lift.c)+t+'</div>'); }   // the map's lift icons
       else if(k==='boundary'){ if((SKI.offpiste||[]).length) rows.push('<div>'+line((STY.boundary||{}).c||'#f4f6f8',[7,5])+t+'</div>'); }
       else if(k==='snowmaking'||k==='danger'){ if(AK.has(k)) rows.push('<div>'+line(k==='danger'?'#e3121b':'#ffffff',[5,4])+t+'</div>'); }
-      else if(['pin','gun','warn','excl'].includes(k)){ if(MKK.has(k)) rows.push('<div>'+icon(k,null,k==='pin'?22:28)+t+'</div>'); }
+      else if(['pin','gun','warn','excl','caution'].includes(k)){ if(MKK.has(k)) rows.push('<div>'+icon(k,null,k==='pin'?22:28)+t+'</div>'); }
       else if(k==='track'){ if((SKI.tracks||[]).length) rows.push('<div>'+line((SKI.tracks[0].c||'#f5d000'))+t+'</div>'); }   // the map's access track
       else if(k==='aid'){ if(MKK.has('aid')) rows.push('<div>'+icon('aid')+t+'</div>'); }
       else if(k==='num'){ if((SKI.spots||[]).some(s=>s.num==e.n)) rows.push('<div>'+icon('num',e.n)+t+'</div>'); }
